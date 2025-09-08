@@ -1,8 +1,8 @@
 # Spring Kafka Admin API
 
-This project provides a RESTful API to manage Apache Kafka topics. It's a Spring Boot application that uses the Kafka AdminClient to interact with a Kafka cluster. The API allows you to perform basic administrative tasks on Kafka topics, such as creating, listing, describing, and deleting them.
+This project provides a RESTful API to manage Apache Kafka topics and view cluster information. It's a Spring Boot application that uses the Kafka AdminClient to interact with a Kafka cluster. The API allows you to perform basic administrative tasks on Kafka topics, such as creating, listing, describing, and deleting them, as well as viewing information about the cluster nodes.
 
-This provides a simple and convenient way to manage your Kafka topics programmatically without having to use the command-line tools that come with Kafka.
+This provides a simple and convenient way to manage your Kafka resources programmatically without having to use the command-line tools that come with Kafka.
 
 ## Prerequisites
 
@@ -48,6 +48,14 @@ This command is the standard way to tear down a Docker Compose environment. It s
 ## API Usage
 
 Here are some examples of how to use the API with `curl`.
+
+### Describe the Cluster
+
+Provides information about the brokers in the Kafka cluster.
+
+```bash
+curl -X GET http://localhost:8080/api/cluster
+```
 
 ### List all topics
 
