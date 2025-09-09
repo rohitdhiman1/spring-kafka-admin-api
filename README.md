@@ -1,6 +1,6 @@
 # Spring Kafka Admin API
 
-This project provides a RESTful API to manage Apache Kafka topics and view cluster information. It's a Spring Boot application that uses the Kafka AdminClient to interact with a Kafka cluster. The API allows you to perform basic administrative tasks on Kafka topics, such as creating, listing, describing, and deleting them, as well as viewing information about the cluster nodes.
+This project provides a RESTful API to manage Apache Kafka topics, consumer groups, and view cluster information. It's a Spring Boot application that uses the Kafka AdminClient to interact with a Kafka cluster. The API allows you to perform basic administrative tasks on Kafka resources, such as creating, listing, describing, and deleting them, as well as viewing information about the cluster nodes.
 
 This provides a simple and convenient way to manage your Kafka resources programmatically without having to use the command-line tools that come with Kafka.
 
@@ -81,4 +81,16 @@ curl -X GET http://localhost:8080/api/topics/my-new-topic
 
 ```bash
 curl -X DELETE http://localhost:8080/api/topics/my-new-topic
+```
+
+### List all consumer groups
+
+```bash
+curl -X GET http://localhost:8080/api/consumer-groups
+```
+
+### Describe a consumer group
+
+```bash
+curl -X GET http://localhost:8080/api/consumer-groups/my-consumer-group
 ```
