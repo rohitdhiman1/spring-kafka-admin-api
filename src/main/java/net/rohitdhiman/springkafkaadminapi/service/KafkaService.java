@@ -53,4 +53,12 @@ public class KafkaService {
     public Collection<Node> describeCluster() throws ExecutionException, InterruptedException {
         return adminClient.describeCluster().nodes().get();
     }
+
+    public Collection<ConsumerGroupListing> listConsumerGroups() throws ExecutionException, InterruptedException {
+        return adminClient.listConsumerGroups().all().get();
+    }
+
+    public Map<String, ConsumerGroupDescription> describeConsumerGroups(Collection<String> groupIds) throws ExecutionException, InterruptedException {
+        return adminClient.describeConsumerGroups(groupIds).all().get();
+    }
 }
