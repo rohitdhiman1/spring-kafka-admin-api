@@ -1,6 +1,8 @@
 package net.rohitdhiman.springkafkaadminapi.controller;
 
 import net.rohitdhiman.springkafkaadminapi.service.KafkaService;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.Node;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,23 @@ public class KafkaController {
     public ResponseEntity<Collection<Node>> describeCluster() throws ExecutionException, InterruptedException {
         Collection<Node> nodes = kafkaService.describeCluster();
         return ResponseEntity.ok(nodes);
+    }
+
+    @GetMapping("/consumer-groups")
+    public ResponseEntity<Collection<ConsumerGroupListing>> listConsumerGroups() throws ExecutionException, InterruptedException {
+        Collection<ConsumerGroupListing> consumerGroups = kafkaService.listConsumerGroups();
+        return ResponseEntity.ok(consumerGroups);
+    }
+
+    @GetMapping("/consumer-groups/{groupId}")
+    public ResponseEntity<ConsumerGroupDescription> describeConsumerGroup(@PathVariable String groupId) throws ExecutionException, InterruptedException {
+        Map<String, ConsumerGroupDescription> description = kafkaService.describeConsumerGroups(List.of(groupId));
+        ConsumerGroupDescription consumerGroupDescription = description.get(groupId);
+
+        if (consumerGroupDescription == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(consumerGroupDescription);
     }
 
     // A record for the topic creation request. Records are a concise way to create
