@@ -37,13 +37,27 @@ This project is configured to run entirely within Docker containers, which simpl
 
 ## How to Stop and Tear Down the Environment
 
-To stop all running containers and remove the network created by Docker Compose, run the following command:
+To cleanly stop all running containers, remove them, and tear down the network created by Docker Compose, run the following command:
 
 ```bash
 docker-compose down
 ```
 
-This command is the standard way to tear down a Docker Compose environment. It stops and removes the containers, which is exactly what you need to do to clean up your local Docker environment after you're done.
+This command is the standard and safest way to tear down a Docker Compose environment. It performs the following actions:
+
+-   **Stops** all the containers defined in your `docker-compose.yml` file.
+-   **Removes** the stopped containers.
+-   **Removes** the networks that were created for the services.
+
+### Removing Volumes (Optional)
+
+By default, `docker-compose down` does not remove the volumes created by your services (like the Kafka data volume). This is a safety feature to prevent data loss. If you want to remove the volumes as well for a complete cleanup, use the `-v` flag:
+
+```bash
+docker-compose down -v
+```
+
+This is useful when you want to start from a completely fresh state.
 
 ## API Documentation
 
