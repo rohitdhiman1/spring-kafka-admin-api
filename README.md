@@ -45,6 +45,15 @@ docker-compose down
 
 This command is the standard way to tear down a Docker Compose environment. It stops and removes the containers, which is exactly what you need to do to clean up your local Docker environment after you're done.
 
+## API Documentation
+
+This project uses `springdoc-openapi` to automatically generate interactive API documentation. Once the application is running, you can access the documentation in your browser:
+
+-   **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+-   **OpenAPI Spec**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+The Swagger UI allows you to explore and test all the API endpoints directly from your browser.
+
 ## API Usage
 
 Here are some examples of how to use the API with `curl`.
