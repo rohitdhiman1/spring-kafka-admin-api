@@ -70,6 +70,41 @@ The Swagger UI allows you to explore and test all the API endpoints directly fro
 
 ## API Usage
 
+
+## Health Check
+
+This project exposes a health check endpoint using Spring Boot Actuator. You can use this endpoint to verify that the application is running and healthy.
+
+### Health Check Endpoint
+
+Returns the health status of the application and its dependencies (such as Kafka).
+
+```bash
+curl -X GET http://localhost:8080/actuator/health
+```
+
+**Sample Response:**
+
+```json
+{
+    "status": "UP",
+    "components": {
+        "kafka": {
+            "status": "UP",
+            "details": {
+                "clusterId": "...",
+                "brokers": [ ... ]
+            }
+        },
+        ...
+    }
+}
+```
+
+You can also view detailed health information in your browser at [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health).
+
+---
+
 Here are some examples of how to use the API with `curl`.
 
 ### Describe the Cluster
