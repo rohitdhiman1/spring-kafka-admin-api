@@ -152,3 +152,37 @@ curl -X GET http://localhost:8080/api/consumer-groups
 ```bash
 curl -X GET http://localhost:8080/api/consumer-groups/my-consumer-group
 ```
+
+## HATEOAS & Enhanced Topic Listing
+
+The `/api/topics` endpoint now returns a HATEOAS-enabled response. Each topic includes meaningful key-value pairs and hypermedia links to guide clients on available actions.
+
+**Sample Response:**
+
+```json
+{
+  "_embedded": {
+    "entityModelList": [
+      {
+        "name": "my-topic",
+        "status": "available",
+        "message": "Kafka topic resource",
+        "_links": {
+          "self": { "href": "http://localhost:8080/api/topics/my-topic" },
+          "delete": { "href": "http://localhost:8080/api/topics/my-topic" }
+        }
+      },
+      // ... more topics ...
+    ]
+  },
+  "_links": {
+    "self": { "href": "http://localhost:8080/api/topics" }
+  }
+}
+```
+
+- The `self` link points to the topic's details endpoint.
+- The `delete` link points to the topic's delete endpoint.
+- Each topic object includes `name`, `status`, and a descriptive `message`.
+
+Clients should use these links to discover available actions and navigate the API in a RESTful manner.
