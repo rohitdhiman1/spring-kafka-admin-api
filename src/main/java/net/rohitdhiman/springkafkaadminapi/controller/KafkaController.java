@@ -8,6 +8,9 @@ import org.apache.kafka.common.Node;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 import java.util.Collection;
 import java.util.List;
@@ -58,16 +61,46 @@ public class KafkaController {
 
     public record MessageResponse(String message) {}
 
+    // Wrapper methods for HATEOAS link generation (no checked exceptions)
+    public ResponseEntity<TopicDescription> describeTopicNoException(String topicName) {
+        try {
+            return describeTopic(topicName);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    public ResponseEntity<MessageResponse> deleteTopicNoException(String topicName) {
+        try {
+            return deleteTopic(topicName);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     // GET /api/topics
     // Endpoint to list all topics in the Kafka cluster.
     @GetMapping("/topics")
-    public ResponseEntity<List<String>> listTopics() throws ExecutionException, InterruptedException {
-        // The listTopics method in the service returns a result object. We'll extract
-        // the topic names and return them as a list of strings for a cleaner API response.
+    public ResponseEntity<CollectionModel<EntityModel<Map<String, Object>>>> listTopics() throws ExecutionException, InterruptedException {
         List<String> topics = kafkaService.listTopics().names().get()
                 .stream()
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(topics);
+
+        List<EntityModel<Map<String, Object>>> topicResources = topics.stream().map(topicName -> {
+            Map<String, Object> topicInfo = Map.of(
+                "name", topicName,
+                "status", "available",
+                "message", "Kafka topic resource"
+            );
+            EntityModel<Map<String, Object>> resource = EntityModel.of(topicInfo);
+            resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).describeTopicNoException(topicName)).withSelfRel());
+            resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).deleteTopicNoException(topicName)).withRel("delete"));
+            return resource;
+        }).collect(Collectors.toList());
+
+        CollectionModel<EntityModel<Map<String, Object>>> collectionModel = CollectionModel.of(topicResources);
+        collectionModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).listTopics()).withSelfRel());
+        return ResponseEntity.ok(collectionModel);
     }
 
     // POST /api/topics
