@@ -153,6 +153,13 @@ curl -X GET http://localhost:8080/api/consumer-groups
 curl -X GET http://localhost:8080/api/consumer-groups/my-consumer-group
 ```
 
+### Find Under-Replicated Topics
+Returns a list of topics that have under-replicated partitions. This is useful for monitoring the health of the cluster.
+
+```bash
+curl -X GET http://localhost:8080/api/topics/under-replicated
+```
+
 ## HATEOAS & Enhanced Topic Listing
 
 The `/api/topics` endpoint now returns a HATEOAS-enabled response. Each topic includes meaningful key-value pairs and hypermedia links to guide clients on available actions.
