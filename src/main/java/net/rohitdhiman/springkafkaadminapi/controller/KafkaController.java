@@ -128,18 +128,27 @@ public class KafkaController {
     }
 
     @GetMapping("/topics/{topicName}")
-    public ResponseEntity<TopicDescription> describeTopic(@PathVariable String topicName) {
+    public ResponseEntity<?> describeTopic(@PathVariable String topicName) {
         try {
             Map<String, TopicDescription> description = kafkaService.describeTopics(List.of(topicName));
             TopicDescription topicDescription = description.get(topicName);
 
             if (topicDescription == null) {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new MessageResponse("Topic '" + topicName + "' not found."));
             }
             return ResponseEntity.ok(topicDescription);
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (ExecutionException e) {
+            if (e.getCause() != null && e.getCause().getClass().getSimpleName().equals("UnknownTopicOrPartitionException")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new MessageResponse("Topic '" + topicName + "' not found."));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error describing topic: " + e.getMessage()));
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Request interrupted."));
         }
     }
 
