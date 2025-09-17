@@ -5,12 +5,11 @@ import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.Node;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,124 +17,141 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-// @RestController combines @Controller and @ResponseBody, meaning it's a controller
-// where every method returns a domain object instead of a view.
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 @RequestMapping("/api")
 public class KafkaController {
 
     private final KafkaService kafkaService;
 
-    // Constructor injection is the recommended way to inject dependencies in Spring.
-    // The KafkaService instance is automatically provided by Spring's IoC container.
     public KafkaController(KafkaService kafkaService) {
         this.kafkaService = kafkaService;
     }
 
     @GetMapping("/cluster")
-    public ResponseEntity<Collection<Node>> describeCluster() throws ExecutionException, InterruptedException {
-        Collection<Node> nodes = kafkaService.describeCluster();
-        return ResponseEntity.ok(nodes);
+    public ResponseEntity<Collection<Node>> describeCluster() {
+        try {
+            Collection<Node> nodes = kafkaService.describeCluster();
+            return ResponseEntity.ok(nodes);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/consumer-groups")
-    public ResponseEntity<Collection<ConsumerGroupListing>> listConsumerGroups() throws ExecutionException, InterruptedException {
-        Collection<ConsumerGroupListing> consumerGroups = kafkaService.listConsumerGroups();
-        return ResponseEntity.ok(consumerGroups);
+    public ResponseEntity<Collection<ConsumerGroupListing>> listConsumerGroups() {
+        try {
+            Collection<ConsumerGroupListing> consumerGroups = kafkaService.listConsumerGroups();
+            return ResponseEntity.ok(consumerGroups);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/consumer-groups/{groupId}")
-    public ResponseEntity<ConsumerGroupDescription> describeConsumerGroup(@PathVariable String groupId) throws ExecutionException, InterruptedException {
-        Map<String, ConsumerGroupDescription> description = kafkaService.describeConsumerGroups(List.of(groupId));
-        ConsumerGroupDescription consumerGroupDescription = description.get(groupId);
+    public ResponseEntity<ConsumerGroupDescription> describeConsumerGroup(@PathVariable String groupId) {
+        try {
+            Map<String, ConsumerGroupDescription> description = kafkaService.describeConsumerGroups(List.of(groupId));
+            ConsumerGroupDescription consumerGroupDescription = description.get(groupId);
 
-        if (consumerGroupDescription == null) {
-            return ResponseEntity.notFound().build();
+            if (consumerGroupDescription == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(consumerGroupDescription);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.ok(consumerGroupDescription);
     }
 
-    // A record for the topic creation request. Records are a concise way to create
-    // immutable data classes in Java.
+    @GetMapping("/topics/under-replicated")
+    public ResponseEntity<List<String>> getUnderReplicatedTopics() {
+        try {
+            List<String> underReplicatedTopics = kafkaService.findUnderReplicatedTopics();
+            return ResponseEntity.ok(underReplicatedTopics);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     public record CreateTopicRequest(String topicName) {}
 
     public record MessageResponse(String message) {}
 
-    // Wrapper methods for HATEOAS link generation (no checked exceptions)
-    public ResponseEntity<TopicDescription> describeTopicNoException(String topicName) {
-        try {
-            return describeTopic(topicName);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    public ResponseEntity<MessageResponse> deleteTopicNoException(String topicName) {
-        try {
-            return deleteTopic(topicName);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // GET /api/topics
-    // Endpoint to list all topics in the Kafka cluster.
     @GetMapping("/topics")
-    public ResponseEntity<CollectionModel<EntityModel<Map<String, Object>>>> listTopics() throws ExecutionException, InterruptedException {
-        List<String> topics = kafkaService.listTopics().names().get()
-                .stream()
-                .collect(Collectors.toList());
+    public ResponseEntity<CollectionModel<EntityModel<Map<String, Object>>>> listTopics() {
+        try {
+            List<String> topics = kafkaService.listTopics().names().get()
+                    .stream()
+                    .collect(Collectors.toList());
 
-        List<EntityModel<Map<String, Object>>> topicResources = topics.stream().map(topicName -> {
-            Map<String, Object> topicInfo = Map.of(
-                "name", topicName,
-                "status", "available",
-                "message", "Kafka topic resource"
-            );
-            EntityModel<Map<String, Object>> resource = EntityModel.of(topicInfo);
-            resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).describeTopicNoException(topicName)).withSelfRel());
-            resource.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).deleteTopicNoException(topicName)).withRel("delete"));
-            return resource;
-        }).collect(Collectors.toList());
+            List<EntityModel<Map<String, Object>>> topicResources = topics.stream().map(topicName -> {
+                Map<String, Object> topicInfo = Map.of(
+                        "name", topicName,
+                        "status", "available",
+                        "message", "Kafka topic resource"
+                );
+                EntityModel<Map<String, Object>> resource = EntityModel.of(topicInfo);
+                
+                // HATEOAS links
+                resource.add(linkTo(methodOn(KafkaController.class).describeTopic(topicName)).withSelfRel());
+                resource.add(linkTo(methodOn(KafkaController.class).deleteTopic(topicName)).withRel("delete"));
+                
+                return resource;
+            }).collect(Collectors.toList());
 
-        CollectionModel<EntityModel<Map<String, Object>>> collectionModel = CollectionModel.of(topicResources);
-        collectionModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(KafkaController.class).listTopics()).withSelfRel());
-        return ResponseEntity.ok(collectionModel);
+            CollectionModel<EntityModel<Map<String, Object>>> collectionModel = CollectionModel.of(topicResources);
+            collectionModel.add(linkTo(methodOn(KafkaController.class).listTopics()).withSelfRel());
+            return ResponseEntity.ok(collectionModel);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // POST /api/topics
-    // Endpoint to create a new topic. The topic name is provided in the request body.
     @PostMapping("/topics")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<MessageResponse> createTopic(@RequestBody CreateTopicRequest request) throws ExecutionException, InterruptedException {
-        kafkaService.createTopic(request.topicName());
-        var response = new MessageResponse("Topic '" + request.topicName() + "' created successfully.");
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    // GET /api/topics/{topicName}
-    // Endpoint to describe a specific topic, providing details like partitions and replication factor.
-    @GetMapping("/topics/{topicName}")
-    public ResponseEntity<TopicDescription> describeTopic(@PathVariable String topicName) throws ExecutionException, InterruptedException {
-        // We'll call a new method in the service to get the topic's description.
-        // This method will need to be added to the KafkaService class.
-        Map<String, TopicDescription> description = kafkaService.describeTopics(List.of(topicName));
-        TopicDescription topicDescription = description.get(topicName);
-
-        if (topicDescription == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<MessageResponse> createTopic(@RequestBody CreateTopicRequest request) {
+        try {
+            kafkaService.createTopic(request.topicName());
+            var response = new MessageResponse("Topic '" + request.topicName() + "' created successfully.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.ok(topicDescription);
     }
 
-    // DELETE /api/topics/{topicName}
-    // Endpoint to delete a specific topic.
+    @GetMapping("/topics/{topicName}")
+    public ResponseEntity<TopicDescription> describeTopic(@PathVariable String topicName) {
+        try {
+            Map<String, TopicDescription> description = kafkaService.describeTopics(List.of(topicName));
+            TopicDescription topicDescription = description.get(topicName);
+
+            if (topicDescription == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(topicDescription);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @DeleteMapping("/topics/{topicName}")
-    public ResponseEntity<MessageResponse> deleteTopic(@PathVariable String topicName) throws ExecutionException, InterruptedException {
-        // We'll call another new method in the service to handle the topic deletion.
-        // This method will also need to be added to the KafkaService class.
-        kafkaService.deleteTopic(topicName);
-        var response = new MessageResponse("Topic '" + topicName + "' deleted successfully.");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<MessageResponse> deleteTopic(@PathVariable String topicName) {
+        try {
+            kafkaService.deleteTopic(topicName);
+            MessageResponse response = new MessageResponse("Topic " + topicName + " deleted successfully.");
+            return ResponseEntity.ok(response);
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
