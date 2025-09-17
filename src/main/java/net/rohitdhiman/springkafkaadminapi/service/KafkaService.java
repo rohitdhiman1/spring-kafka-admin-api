@@ -3,11 +3,14 @@ package net.rohitdhiman.springkafkaadminapi.service;
 import net.rohitdhiman.springkafkaadminapi.exception.TopicAlreadyExistsException;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -60,5 +63,21 @@ public class KafkaService {
 
     public Map<String, ConsumerGroupDescription> describeConsumerGroups(Collection<String> groupIds) throws ExecutionException, InterruptedException {
         return adminClient.describeConsumerGroups(groupIds).all().get();
+    }
+
+    public List<String> findUnderReplicatedTopics() throws ExecutionException, InterruptedException {
+        Collection<String> allTopicNames = adminClient.listTopics().names().get();
+        Map<String, TopicDescription> topicDescriptions = adminClient.describeTopics(allTopicNames).allTopicNames().get();
+
+        List<String> underReplicatedTopics = new ArrayList<>();
+        for (TopicDescription description : topicDescriptions.values()) {
+            for (TopicPartitionInfo partitionInfo : description.partitions()) {
+                if (partitionInfo.isr().size() < partitionInfo.replicas().size()) {
+                    underReplicatedTopics.add(description.name());
+                    break;
+                }
+            }
+        }
+        return underReplicatedTopics;
     }
 }
