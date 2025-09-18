@@ -121,9 +121,13 @@ public class KafkaController {
             kafkaService.createTopic(request.topicName());
             var response = new MessageResponse("Topic '" + request.topicName() + "' created successfully.");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (net.rohitdhiman.springkafkaadminapi.exception.TopicAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new MessageResponse("Topic '" + request.topicName() + "' already exists."));
         } catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error creating topic: " + e.getMessage()));
         }
     }
 
