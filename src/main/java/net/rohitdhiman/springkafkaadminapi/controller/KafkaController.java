@@ -79,7 +79,7 @@ public class KafkaController {
         }
     }
 
-    public record CreateTopicRequest(String topicName) {}
+    public record CreateTopicRequest(String topicName, Integer numPartitions, Short replicationFactor) {}
 
     public record MessageResponse(String message) {}
 
@@ -118,7 +118,7 @@ public class KafkaController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<MessageResponse> createTopic(@RequestBody CreateTopicRequest request) {
         try {
-            kafkaService.createTopic(request.topicName());
+            kafkaService.createTopic(request.topicName(), request.numPartitions(), request.replicationFactor());
             var response = new MessageResponse("Topic '" + request.topicName() + "' created successfully.");
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (net.rohitdhiman.springkafkaadminapi.exception.TopicAlreadyExistsException e) {
