@@ -23,10 +23,10 @@ public class KafkaService {
         this.adminClient = adminClient;
     }
 
-    public void createTopic(String topicName) throws ExecutionException, InterruptedException {
-        int numPartitions = 1;
-        short replicationFactor = 1;
-        NewTopic newTopic = new NewTopic(topicName, numPartitions, replicationFactor);
+    public void createTopic(String topicName, Integer numPartitions, Short replicationFactor) throws ExecutionException, InterruptedException {
+        int finalNumPartitions = (numPartitions != null) ? numPartitions : 1;
+        short finalReplicationFactor = (replicationFactor != null) ? replicationFactor : 1;
+        NewTopic newTopic = new NewTopic(topicName, finalNumPartitions, finalReplicationFactor);
         CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
         try {
             createTopicsResult.all().get();
