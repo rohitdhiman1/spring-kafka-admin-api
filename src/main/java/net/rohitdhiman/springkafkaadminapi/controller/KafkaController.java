@@ -69,10 +69,10 @@ public class KafkaController {
     }
 
     @GetMapping("/topics/under-replicated")
-    public ResponseEntity<List<String>> getUnderReplicatedTopics() {
+    public ResponseEntity<Map<String, List<Integer>>> getUnderReplicatedPartitions() {
         try {
-            List<String> underReplicatedTopics = kafkaService.findUnderReplicatedTopics();
-            return ResponseEntity.ok(underReplicatedTopics);
+            Map<String, List<Integer>> underReplicatedPartitions = kafkaService.findUnderReplicatedPartitions();
+            return ResponseEntity.ok(underReplicatedPartitions);
         } catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
