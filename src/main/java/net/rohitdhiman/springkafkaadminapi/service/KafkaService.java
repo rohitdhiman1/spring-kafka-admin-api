@@ -7,12 +7,12 @@ import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class KafkaService {
@@ -65,19 +65,17 @@ public class KafkaService {
         return adminClient.describeConsumerGroups(groupIds).all().get();
     }
 
-    public List<String> findUnderReplicatedTopics() throws ExecutionException, InterruptedException {
+    public Map<String, List<Integer>> findUnderReplicatedPartitions() throws ExecutionException, InterruptedException {
         Collection<String> allTopicNames = adminClient.listTopics().names().get();
         Map<String, TopicDescription> topicDescriptions = adminClient.describeTopics(allTopicNames).allTopicNames().get();
 
-        List<String> underReplicatedTopics = new ArrayList<>();
-        for (TopicDescription description : topicDescriptions.values()) {
-            for (TopicPartitionInfo partitionInfo : description.partitions()) {
-                if (partitionInfo.isr().size() < partitionInfo.replicas().size()) {
-                    underReplicatedTopics.add(description.name());
-                    break;
-                }
-            }
-        }
-        return underReplicatedTopics;
+        return topicDescriptions.values().stream()
+                .filter(description -> description.partitions().stream()
+                        .anyMatch(partitionInfo -> partitionInfo.isr().size() < partitionInfo.replicas().size()))
+                .collect(Collectors.toMap(TopicDescription::name,
+                        description -> description.partitions().stream()
+                                .filter(partitionInfo -> partitionInfo.isr().size() < partitionInfo.replicas().size())
+                                .map(TopicPartitionInfo::partition)
+                                .collect(Collectors.toList())));
     }
 }
