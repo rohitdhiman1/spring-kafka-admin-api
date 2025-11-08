@@ -39,12 +39,15 @@ We separate tests into two categories for optimal development speed:
 ### Recommended Workflow
 
 ```bash
-# 1. Fast development cycle (unit tests only)
-# Make code changes, run unit tests
+# 1. Fast development cycle (unit tests only - runs in ~3 seconds)
+# Make code changes, run unit tests with mocked dependencies
+mvn test -Dtest="*UnitTest"
+
+# 2. Integration verification (before commit - runs in ~30 seconds)
+# Tests with real Kafka using Testcontainers (auto-manages Docker)
 mvn test
 
-# 2. Integration verification (before commit)
-# Tests with real Kafka using Testcontainers
+# Or run full build with integration tests
 mvn verify
 
 # 3. Local environment (manual testing/debugging)
@@ -62,13 +65,23 @@ docker-compose down
 
 ### Quick Commands Reference
 
-| Command | Purpose | Speed | Docker Required |
-|---------|---------|-------|-----------------|
-| `mvn test` | Run all tests | Fast/Medium | No (uses Testcontainers) |
-| `mvn test -DskipTests` | Build without tests | Fastest | No |
-| `mvn verify` | Full build + all tests | Medium | No (uses Testcontainers) |
-| `docker-compose up -d` | Start local env | N/A | Yes |
-| `docker-compose down` | Stop local env | N/A | Yes |
+| Command | Purpose | Speed | Docker Daemon Required |
+|---------|---------|-------|------------------------|
+| `mvn test -Dtest="*UnitTest"` | Run unit tests only | ~3 sec | ❌ **No** - Pure unit tests with mocks |
+| `mvn test` | Run all tests | ~30 sec | ✅ **Yes** - Testcontainers auto-starts Kafka |
+| `mvn package -DskipTests` | Build without tests | ~5 sec | ❌ No |
+| `mvn verify` | Full build + all tests | ~30 sec | ✅ **Yes** - Testcontainers auto-starts Kafka |
+| `docker-compose up -d` | Start local env | N/A | ✅ Yes |
+| `docker-compose down` | Stop local env | N/A | ✅ Yes |
+
+**Docker Requirements Explained:**
+
+- **No Docker needed:** Unit tests (`*UnitTest`) use mocked dependencies - zero infrastructure required
+- **Docker daemon must be running:** `mvn test` and `mvn verify` use Testcontainers which automatically manages Kafka containers
+  - You DON'T need to run `docker-compose up` manually
+  - Testcontainers handles starting/stopping containers automatically
+  - Just ensure Docker Desktop (or Docker daemon) is running in the background
+- **Manual Docker Compose:** Only needed for local development, manual testing, or accessing Kafdrop UI
 
 ### Why This Approach?
 
