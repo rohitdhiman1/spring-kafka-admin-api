@@ -70,6 +70,7 @@ class KafkaControllerUnitTest {
     void testListTopics_Success() throws Exception {
         // Arrange
         ListTopicsResult listTopicsResult = mock(ListTopicsResult.class);
+        @SuppressWarnings("unchecked")
         KafkaFuture<Set<String>> future = mock(KafkaFuture.class);
         Set<String> topics = Set.of("topic1", "topic2", "topic3");
         
