@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.*;
 
 /**
@@ -56,6 +57,7 @@ class KafkaServiceUnitTest {
     void testCreateTopic_AlreadyExists() throws ExecutionException, InterruptedException {
         // Arrange
         CreateTopicsResult createTopicsResult = mock(CreateTopicsResult.class);
+        @SuppressWarnings("unchecked")
         KafkaFuture<Void> future = mock(KafkaFuture.class);
         
         when(adminClient.createTopics(any())).thenReturn(createTopicsResult);
@@ -102,6 +104,7 @@ class KafkaServiceUnitTest {
     void testDescribeCluster() throws ExecutionException, InterruptedException {
         // Arrange
         DescribeClusterResult describeClusterResult = mock(DescribeClusterResult.class);
+        @SuppressWarnings("unchecked")
         KafkaFuture<Collection<Node>> future = mock(KafkaFuture.class);
         Node node1 = new Node(1, "localhost", 9092);
         Node node2 = new Node(2, "localhost", 9093);
@@ -126,20 +129,21 @@ class KafkaServiceUnitTest {
         DeleteTopicsResult deleteTopicsResult = mock(DeleteTopicsResult.class);
         KafkaFuture<Void> future = KafkaFuture.completedFuture(null);
         
-        when(adminClient.deleteTopics(any(Collection.class))).thenReturn(deleteTopicsResult);
+        when(adminClient.deleteTopics(anyCollection())).thenReturn(deleteTopicsResult);
         when(deleteTopicsResult.all()).thenReturn(future);
 
         // Act
         kafkaService.deleteTopic("topic-to-delete");
 
         // Assert
-        verify(adminClient, times(1)).deleteTopics(any(Collection.class));
+        verify(adminClient, times(1)).deleteTopics(anyCollection());
     }
 
     @Test
     void testListConsumerGroups() throws ExecutionException, InterruptedException {
         // Arrange
         ListConsumerGroupsResult listConsumerGroupsResult = mock(ListConsumerGroupsResult.class);
+        @SuppressWarnings("unchecked")
         KafkaFuture<Collection<ConsumerGroupListing>> future = mock(KafkaFuture.class);
         Collection<ConsumerGroupListing> groups = Collections.emptyList();
         
@@ -159,10 +163,11 @@ class KafkaServiceUnitTest {
     void testDescribeTopics() throws ExecutionException, InterruptedException {
         // Arrange
         DescribeTopicsResult describeTopicsResult = mock(DescribeTopicsResult.class);
+        @SuppressWarnings("unchecked")
         KafkaFuture<Map<String, TopicDescription>> future = mock(KafkaFuture.class);
         Map<String, TopicDescription> descriptions = new HashMap<>();
         
-        when(adminClient.describeTopics(any(Collection.class))).thenReturn(describeTopicsResult);
+        when(adminClient.describeTopics(anyCollection())).thenReturn(describeTopicsResult);
         when(describeTopicsResult.allTopicNames()).thenReturn(future);
         when(future.get()).thenReturn(descriptions);
 
@@ -171,6 +176,6 @@ class KafkaServiceUnitTest {
 
         // Assert
         assertNotNull(result);
-        verify(adminClient, times(1)).describeTopics(any(Collection.class));
+        verify(adminClient, times(1)).describeTopics(anyCollection());
     }
 }
