@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -20,9 +20,9 @@ class KafkaAbstractionApplicationTests {
 
     // @Container: This annotation tells Testcontainers to manage this container's lifecycle.
     // The container will be started before tests and stopped after tests.
-    // Using Confluent Platform 7.4.0 to match the docker-compose setup.
+    // Using Apache Kafka 3.8.1 (latest stable) with the new KafkaContainer from org.testcontainers.kafka
     @Container
-    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
+    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.1"));
 
     // This method dynamically sets the spring.kafka.bootstrap-servers property
     // to point to the Testcontainers-managed Kafka instance.
