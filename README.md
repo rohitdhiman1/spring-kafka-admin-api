@@ -1,15 +1,31 @@
 # Spring Kafka Admin API
 
-This project provides a RESTful API to manage Apache Kafka topics, consumer groups, and view cluster information. It's a Spring Boot application that uses the Kafka AdminClient to interact with a Kafka cluster. The API allows you to perform basic administrative tasks on Kafka resources, such as creating, listing, describing, and deleting them, as well as viewing information about the cluster nodes.
+A modern Kafka administration platform with a RESTful API and React-based web dashboard. Manage Apache Kafka topics, consumer groups, and monitor cluster health through a beautiful, responsive UI or programmatic API.
 
-This provides a simple and convenient way to manage your Kafka resources programmatically without having to use the command-line tools that come with Kafka.
+## Features
+
+### Backend API
+- 🔌 RESTful API with HATEOAS support
+- 📋 Topic management (create, list, describe, delete)
+- 👥 Consumer group monitoring
+- 🖥️ Cluster information and health checks
+- 🔍 Under-replicated partition detection
+- 📊 Spring Boot Actuator metrics
+
+### Frontend Dashboard
+- ⚡ Modern React 18 + TypeScript UI
+- 🌓 Dark mode support
+- 📱 Mobile-responsive design
+- 🔄 Real-time auto-refresh
+- 🎨 Tailwind CSS styling
+- 📈 Interactive charts and metrics
 
 ## Prerequisites
 
 - Java 17 or later
 - Maven
-- Docker
-- Docker Compose
+- Docker & Docker Compose
+- Node.js 18+ (for frontend development)
 
 ## Development & Testing Strategy
 
@@ -91,29 +107,75 @@ docker-compose down
 ✅ **CI/CD ready**: All tests run without pre-configuration  
 ✅ **Developer friendly**: Choose the right tool for each task
 
-## How to run locally
+## Quick Start
 
-This project is configured to run entirely within Docker containers, which simplifies setup and ensures a consistent environment.
+### Option 1: Full Stack with Frontend (Recommended for Users)
 
-1.  **Package the Spring Boot Application:**
+```bash
+# 1. Build backend
+mvn clean package
 
-    First, build the application's JAR file using Maven. This command cleans the project and packages it into a `.jar` file in the `target/` directory.
+# 2. Start all services
+docker-compose up --build
 
-    ```bash
-    mvn clean package
-    ```
+# 3. In another terminal, start frontend
+cd frontend
+npm install
+npm run dev
 
-2.  **Build and Run All Services:**
+# Access services:
+# - Frontend Dashboard: http://localhost:3000
+# - Backend API: http://localhost:8080
+# - Swagger UI: http://localhost:8080/swagger-ui.html
+# - Kafdrop (Kafka UI): http://localhost:9000
+```
 
-    Use Docker Compose to build the Spring Boot application image and start all the services (Spring app, Kafka, Zookeeper, and Kafdrop).
+### Option 2: Backend Only (For API Development)
 
-    ```bash
-    docker-compose up --build
-    ```
+```bash
+# 1. Package the Spring Boot Application
+mvn clean package
 
-    -   The `--build` flag tells Docker Compose to rebuild the `spring-app` image to include your latest code changes.
-    -   Your application API will be available at `http://localhost:8080`.
-    -   You can view the Kafka cluster UI (Kafdrop) at `http://localhost:9000`.
+# 2. Build and Run All Services
+docker-compose up --build
+
+# Access services:
+# - API: http://localhost:8080
+# - Swagger UI: http://localhost:8080/swagger-ui.html
+# - Kafdrop (Kafka UI): http://localhost:9000
+```
+
+### Option 3: Development Mode (Backend + Frontend)
+
+```bash
+# Terminal 1: Start Kafka infrastructure only
+docker-compose up kafka1 kafka2 kafka3 kafka4 zookeeper kafdrop
+
+# Terminal 2: Run backend locally
+mvn spring-boot:run
+
+# Terminal 3: Run frontend locally
+cd frontend
+npm run dev
+
+# Access services:
+# - Frontend: http://localhost:3000
+# - Backend: http://localhost:8080
+# - Kafdrop: http://localhost:9000
+```
+
+## Frontend Dashboard
+
+The React-based dashboard provides:
+
+- **Dashboard**: Real-time metrics, cluster health, under-replicated partitions
+- **Topics**: Create, list, delete topics with detailed information
+- **Consumer Groups**: Monitor consumer group status and state
+- **Cluster**: View broker nodes and cluster information
+- **Dark Mode**: Toggle between light and dark themes
+- **Responsive**: Works on desktop, tablet, and mobile
+
+See [frontend/README.md](frontend/README.md) for detailed frontend documentation.
 
 ## How to Stop and Tear Down the Environment
 
