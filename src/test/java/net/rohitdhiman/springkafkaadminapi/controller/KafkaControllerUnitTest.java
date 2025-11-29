@@ -47,13 +47,16 @@ class KafkaControllerUnitTest {
         Node node1 = new Node(1, "localhost", 9092);
         Node node2 = new Node(2, "localhost", 9093);
         Collection<Node> nodes = Arrays.asList(node1, node2);
-        when(kafkaService.describeCluster()).thenReturn(nodes);
+        net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo clusterInfo = 
+            new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo("test-cluster-id", node1, nodes);
+        when(kafkaService.describeCluster()).thenReturn(clusterInfo);
 
         // Act & Assert
         mockMvc.perform(get("/api/cluster"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.clusterId").value("test-cluster-id"))
+                .andExpect(jsonPath("$.nodes").isArray())
+                .andExpect(jsonPath("$.nodes.length()").value(2));
     }
 
     @Test
