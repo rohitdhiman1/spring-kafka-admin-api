@@ -4,7 +4,6 @@ import net.rohitdhiman.springkafkaadminapi.service.KafkaService;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.TopicDescription;
-import org.apache.kafka.common.Node;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
@@ -31,10 +30,10 @@ public class KafkaController {
     }
 
     @GetMapping("/cluster")
-    public ResponseEntity<Collection<Node>> describeCluster() {
+    public ResponseEntity<net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo> describeCluster() {
         try {
-            Collection<Node> nodes = kafkaService.describeCluster();
-            return ResponseEntity.ok(nodes);
+            net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo clusterInfo = kafkaService.describeCluster();
+            return ResponseEntity.ok(clusterInfo);
         } catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
