@@ -53,8 +53,12 @@ public class KafkaService {
         adminClient.deleteTopics(Collections.singleton(topicName)).all().get();
     }
 
-    public Collection<Node> describeCluster() throws ExecutionException, InterruptedException {
-        return adminClient.describeCluster().nodes().get();
+    public net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo describeCluster() throws ExecutionException, InterruptedException {
+        DescribeClusterResult clusterResult = adminClient.describeCluster();
+        String clusterId = clusterResult.clusterId().get();
+        Node controller = clusterResult.controller().get();
+        Collection<Node> nodes = clusterResult.nodes().get();
+        return new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo(clusterId, controller, nodes);
     }
 
     public Collection<ConsumerGroupListing> listConsumerGroups() throws ExecutionException, InterruptedException {
