@@ -105,22 +105,33 @@ class KafkaServiceUnitTest {
         // Arrange
         DescribeClusterResult describeClusterResult = mock(DescribeClusterResult.class);
         @SuppressWarnings("unchecked")
-        KafkaFuture<Collection<Node>> future = mock(KafkaFuture.class);
+        KafkaFuture<Collection<Node>> nodesFuture = mock(KafkaFuture.class);
+        @SuppressWarnings("unchecked")
+        KafkaFuture<String> clusterIdFuture = mock(KafkaFuture.class);
+        @SuppressWarnings("unchecked")
+        KafkaFuture<Node> controllerFuture = mock(KafkaFuture.class);
+        
         Node node1 = new Node(1, "localhost", 9092);
         Node node2 = new Node(2, "localhost", 9093);
         Collection<Node> nodes = Arrays.asList(node1, node2);
         
         when(adminClient.describeCluster()).thenReturn(describeClusterResult);
-        when(describeClusterResult.nodes()).thenReturn(future);
-        when(future.get()).thenReturn(nodes);
+        when(describeClusterResult.clusterId()).thenReturn(clusterIdFuture);
+        when(clusterIdFuture.get()).thenReturn("test-cluster-id");
+        when(describeClusterResult.controller()).thenReturn(controllerFuture);
+        when(controllerFuture.get()).thenReturn(node1);
+        when(describeClusterResult.nodes()).thenReturn(nodesFuture);
+        when(nodesFuture.get()).thenReturn(nodes);
 
         // Act
-        Collection<Node> result = kafkaService.describeCluster();
+        net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo result = kafkaService.describeCluster();
 
         // Assert
-        assertEquals(2, result.size());
-        assertTrue(result.contains(node1));
-        assertTrue(result.contains(node2));
+        assertEquals("test-cluster-id", result.clusterId());
+        assertEquals(node1, result.controller());
+        assertEquals(2, result.nodes().size());
+        assertTrue(result.nodes().contains(node1));
+        assertTrue(result.nodes().contains(node2));
     }
 
     @Test
