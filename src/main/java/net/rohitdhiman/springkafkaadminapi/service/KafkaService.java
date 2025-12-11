@@ -58,7 +58,15 @@ public class KafkaService {
         String clusterId = clusterResult.clusterId().get();
         Node controller = clusterResult.controller().get();
         Collection<Node> nodes = clusterResult.nodes().get();
-        return new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo(clusterId, controller, nodes);
+        
+        // Convert Node objects to NodeInfo DTOs
+        net.rohitdhiman.springkafkaadminapi.dto.NodeInfo controllerInfo = 
+            controller != null ? new net.rohitdhiman.springkafkaadminapi.dto.NodeInfo(controller) : null;
+        List<net.rohitdhiman.springkafkaadminapi.dto.NodeInfo> nodeInfoList = nodes.stream()
+            .map(net.rohitdhiman.springkafkaadminapi.dto.NodeInfo::new)
+            .collect(Collectors.toList());
+        
+        return new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo(clusterId, controllerInfo, nodeInfoList);
     }
 
     public Collection<ConsumerGroupListing> listConsumerGroups() throws ExecutionException, InterruptedException {
