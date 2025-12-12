@@ -46,9 +46,11 @@ class KafkaControllerUnitTest {
         // Arrange
         Node node1 = new Node(1, "localhost", 9092);
         Node node2 = new Node(2, "localhost", 9093);
-        Collection<Node> nodes = Arrays.asList(node1, node2);
+        net.rohitdhiman.springkafkaadminapi.dto.NodeInfo nodeInfo1 = new net.rohitdhiman.springkafkaadminapi.dto.NodeInfo(node1);
+        net.rohitdhiman.springkafkaadminapi.dto.NodeInfo nodeInfo2 = new net.rohitdhiman.springkafkaadminapi.dto.NodeInfo(node2);
+        List<net.rohitdhiman.springkafkaadminapi.dto.NodeInfo> nodes = Arrays.asList(nodeInfo1, nodeInfo2);
         net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo clusterInfo = 
-            new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo("test-cluster-id", node1, nodes);
+            new net.rohitdhiman.springkafkaadminapi.dto.ClusterInfo("test-cluster-id", nodeInfo1, nodes);
         when(kafkaService.describeCluster()).thenReturn(clusterInfo);
 
         // Act & Assert
